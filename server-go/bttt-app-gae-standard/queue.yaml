@@ -1,0 +1,4 @@
+queue:
+
+- name: turn
+  rate: 10/s
