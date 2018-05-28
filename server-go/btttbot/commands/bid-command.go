@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/strongo/bidding-tictactoe-bot/bttt-trans"
+	"github.com/strongo-games/bidding-tictactoe/server-go/bttt-trans"
 	"github.com/strongo/bots-framework/core"
 	"strconv"
 	"strings"

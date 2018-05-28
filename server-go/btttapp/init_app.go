@@ -2,8 +2,8 @@ package btttapp
 
 import (
 	"github.com/julienschmidt/httprouter"
-	"github.com/strongo/bidding-tictactoe-bot/btttbot"
-	"github.com/strongo/bidding-tictactoe-bot/btttdal/btttdalgae"
+	"github.com/strongo-games/bidding-tictactoe/server-go/btttbot"
+	"github.com/strongo-games/bidding-tictactoe/server-go/btttdal/btttdalgae"
 	"github.com/strongo/bots-framework/core"
 	"net/http"
 )

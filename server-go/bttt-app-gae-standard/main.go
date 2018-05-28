@@ -2,8 +2,8 @@ package bttt_app_gae_standard
 
 import (
 	"github.com/julienschmidt/httprouter"
-	"github.com/strongo/bidding-tictactoe-bot/btttapp"
-	"github.com/strongo/bidding-tictactoe-bot/btttbot-secrets"
+	"github.com/strongo-games/bidding-tictactoe/server-go/btttapp"
+	"github.com/strongo-games/bidding-tictactoe/server-go/btttbot-secrets"
 	"github.com/strongo/bots-framework/hosts/appengine"
 	"github.com/strongo/log"
 	"google.golang.org/appengine"

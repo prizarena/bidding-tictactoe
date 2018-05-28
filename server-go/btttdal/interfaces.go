@@ -2,7 +2,7 @@ package btttdal
 
 import (
 	"context"
-	"github.com/strongo/bidding-tictactoe-bot/btttmodels"
+	"github.com/strongo-games/bidding-tictactoe/server-go/btttmodels"
 )
 
 type UserDal interface {

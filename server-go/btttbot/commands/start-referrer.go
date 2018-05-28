@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 	"github.com/pkg/errors"
-	"github.com/strongo/bidding-tictactoe-bot/btttdal"
-	"github.com/strongo/bidding-tictactoe-bot/btttmodels"
+	"github.com/strongo-games/bidding-tictactoe/server-go/btttdal"
+	"github.com/strongo-games/bidding-tictactoe/server-go/btttmodels"
 	"github.com/strongo/bots-framework/core"
 	"github.com/strongo/db"
 	"github.com/strongo/log"

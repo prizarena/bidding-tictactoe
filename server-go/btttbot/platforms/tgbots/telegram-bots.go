@@ -2,7 +2,7 @@ package tgbots
 
 import (
 	"github.com/strongo/app"
-	"github.com/strongo/bidding-tictactoe-bot/btttbot-secrets"
+	"github.com/strongo-games/bidding-tictactoe/server-go/btttbot-secrets"
 	"github.com/strongo/bots-framework/core"
 	"github.com/strongo/bots-framework/platforms/telegram"
 	"context"
