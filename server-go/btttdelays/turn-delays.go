@@ -2,8 +2,7 @@ package btttdelays
 
 import (
 	"context"
-	"fmt"
-	"github.com/pkg/errors"
+		"github.com/pkg/errors"
 	"github.com/qedus/nds"
 	"github.com/strongo/app"
 	"github.com/strongo/app/gae"
@@ -19,6 +18,7 @@ import (
 	"google.golang.org/appengine/urlfetch"
 	"net/http"
 	"strings"
+	"strconv"
 )
 
 func DelayUpdateInBotMessage(c context.Context, botID string, gameID, userID int64) error {
@@ -50,16 +50,10 @@ var delayedUpdateInBotMessage = delay.Func("UpdateInBotMessage", func(c context.
 		}
 		return
 	}
-	switch userID {
-	case game.XUserID:
-		baseEdit.ChatID = game.XTgChatID
-		baseEdit.MessageID = game.XTgMessageID
-	case game.OUserID:
-		baseEdit.ChatID = game.OTgChatID
-		baseEdit.MessageID = game.OTgMessageID
-	default:
-		log.Errorf(c, fmt.Sprintf("User %d does not belong to the game %d", userID, gameID))
-		return
+	{
+		userXO := game.GetPlayerJsonByUserID(userID)
+		baseEdit.ChatID = userXO.TgChatID()
+		baseEdit.MessageID = userXO.TgMessageID()
 	}
 
 	if baseEdit.ChatID != 0 {
@@ -212,19 +206,9 @@ func newGameTelegramMessage(c context.Context, botID string, chatID int64, game 
 				return err
 			}
 			changed := false
-			switch currentUserID {
-			case game.XUserID:
-				if game.XTgMessageID == 0 {
-					game.XTgMessageID = response.MessageID
-					changed = true
-				}
-			case game.OUserID:
-				if game.OTgMessageID == 0 {
-					game.OTgMessageID = response.MessageID
-					changed = true
-				}
-			default:
-				panic(fmt.Sprintf("Unknown currentUserID: %d", currentUserID))
+			if userXO := game.GetPlayerJsonByUserID(currentUserID); userXO.Tg.MessageID == "" {
+				userXO.Tg.MessageID = strconv.Itoa(response.MessageID)
+				changed = game.SetPlayerJson(currentUserID, userXO)
 			}
 			if changed {
 				if err = btttdal.Game.SaveGame(c, game); err != nil {

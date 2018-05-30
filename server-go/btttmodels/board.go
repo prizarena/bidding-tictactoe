@@ -23,6 +23,10 @@ const (
 	NoWinnerYet Player = NotPlayer
 )
 
+func IsValidPlayer(p Player) bool {
+	return p == PlayerX || p == PlayerO
+}
+
 type Coordinates struct {
 	X int8
 	Y int8

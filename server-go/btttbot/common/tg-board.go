@@ -32,9 +32,9 @@ func BoardToInlineKeyboard(c context.Context, translator strongo.SingleLocaleTra
 			var opponentName string
 			switch currentUserID {
 			case game.XUserID:
-				opponentName = game.OUserName
+				opponentName = game.PlayerO().Name
 			case game.OUserID:
-				opponentName = game.XUserName
+				opponentName = game.PlayerX().Name
 			default:
 				panic("Unknown user")
 			}

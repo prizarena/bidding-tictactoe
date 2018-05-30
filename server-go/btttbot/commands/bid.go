@@ -14,6 +14,7 @@ import (
 	"github.com/strongo/bots-framework/core"
 	"github.com/strongo/log"
 	"time"
+	"strconv"
 )
 
 func processBid(whc bots.WebhookContext, gameID int64, bid int16, x, y int8) (m bots.MessageFromBot, err error) {
@@ -56,54 +57,58 @@ func processBid(whc bots.WebhookContext, gameID int64, bid int16, x, y int8) (m 
 
 		currentTurn := game.Logbook.CurrentTurn()
 
+		processPlayer := func(userXO btttmodels.GamePlayerJson, userTurn btttmodels.GameMove) (btttmodels.GamePlayerJson, error) {
+			if userTurn.Bid > userXO.Balance {
+				playerName = userXO.Name
+				return userXO, errors.WithMessage(errBidTooBig, fmt.Sprintf("%v: bid:%d > balance:%v", player, userTurn.Bid, userXO.Balance))
+			}
+			userXO.BidTime = time.Now()
+			if !currentTurn.X.HasTarget() {
+				return userXO, errors.New("player X has no target")
+			}
+			return userXO, nil
+		}
+
+		userX, userO := game.GetUsersXO()
+
 		switch player {
 		case btttmodels.PlayerX:
-			if currentTurn.X.Bid > game.XBalance {
-				playerName = game.XUserName
-				return errors.WithMessage(errBidTooBig, fmt.Sprintf("XBid:%d > game.XBalance:%v", currentTurn.X.Bid, game.XBalance))
-			}
-			game.XBidTime = time.Now()
-			if !currentTurn.X.HasTarget() {
-				return errors.New("player X has no target")
+			if userX, err = processPlayer(userX, currentTurn.X); err != nil {
+				return err
 			}
 		case btttmodels.PlayerO:
-			if currentTurn.O.Bid > game.OBalance {
-				playerName = game.OUserName
-				return errors.WithMessage(errBidTooBig, fmt.Sprintf("game.OBid:%d > game.OBalance:%v", currentTurn.O.Bid, game.OBalance))
+			if userO, err = processPlayer(userO, currentTurn.O); err != nil {
+				return err
 			}
-			game.OBidTime = time.Now()
-			if !currentTurn.O.HasTarget() {
-				return errors.New("player O has no target")
-			}
-
-			if game.OUserName == "" {
+			if userO.Name == "" { // TODO: Move inside processPlayer()?
 				var botUser bots.BotAppUser
 				if botUser, err = whc.GetAppUser(); err != nil {
 					return err
 				}
 				user := botUser.(*btttmodels.AppUserEntity)
-				game.OUserName = user.FullName()
+				userO.Name = user.FullName()
 			}
 		default:
 			panic(fmt.Sprintf("Unknown player value: %v", player))
 		}
 		if currentTurn.HasBothBidsAndTargets() ||
-			(game.XBalance == 0 && currentTurn.X.HasTarget() && currentTurn.O.HasBidAndTarget()) ||
-			(game.OBalance == 0 && currentTurn.O.HasTarget() && currentTurn.X.HasBidAndTarget()) {
+			(userX.Balance == 0 && currentTurn.X.HasTarget() && currentTurn.O.HasBidAndTarget()) ||
+			(userO.Balance == 0 && currentTurn.O.HasTarget() && currentTurn.X.HasBidAndTarget()) {
 			xBid, oBid := currentTurn.X.Bid, currentTurn.O.Bid
 			log.Debugf(c, "Game has bids and targets from both players: XBid=%d, OBid=%d", xBid, oBid)
+
 			if xBid > oBid {
 				targetCell = game.TargetCell(btttmodels.PlayerX)
 			} else if oBid > xBid {
 				targetCell = game.TargetCell(btttmodels.PlayerO)
 			} else if xBid == oBid {
-				if game.XBalance > game.OBalance {
+				if userX.Balance > userO.Balance {
 					targetCell = game.TargetCell(btttmodels.PlayerX)
-				} else if game.OBalance > game.XBalance {
+				} else if userO.Balance > userX.Balance {
 					targetCell = game.TargetCell(btttmodels.PlayerO)
-				} else if game.XBidTime.Before(game.OBidTime) {
+				} else if userX.BidTime.Before(userO.BidTime) {
 					targetCell = game.TargetCell(btttmodels.PlayerX)
-				} else if game.OBidTime.Before(game.XBidTime) {
+				} else if userO.BidTime.Before(userX.BidTime) {
 					targetCell = game.TargetCell(btttmodels.PlayerO)
 				} else {
 					panic("Program logic error: XBid == OBid && OBalance == XBalance && XBidTime == OBidTime")
@@ -117,22 +122,24 @@ func processBid(whc bots.WebhookContext, gameID int64, bid int16, x, y int8) (m 
 			}
 			switch targetCell.V {
 			case btttmodels.PlayerX:
-				if xBid > game.XBalance {
-					return errors.Wrap(errBidTooBig, fmt.Sprintf("game.XBid:%d > game.XBalance:%v", xBid, game.XBalance))
+				if xBid > userX.Balance {
+					return errors.Wrap(errBidTooBig, fmt.Sprintf("game.XBid:%d > game.XBalance:%v", xBid, userX.Balance))
 				}
-				game.XBalance -= xBid
-				game.OBalance += xBid
+				userX.Balance -= xBid
+				userO.Balance += xBid
 			case btttmodels.PlayerO:
-				if oBid > game.OBalance {
-					return errors.Wrap(errBidTooBig, fmt.Sprintf("game.OBid:%d > game.OBalance:%v", oBid, game.OBalance))
+				if oBid > userO.Balance {
+					return errors.Wrap(errBidTooBig, fmt.Sprintf("game.OBid:%d > game.OBalance:%v", oBid, userO.Balance))
 				}
-				game.OBalance -= oBid
-				game.XBalance += oBid
+				userO.Balance -= oBid
+				userX.Balance += oBid
+
 			default:
 				panic(fmt.Sprintf("Unknown player: %v", player))
 			}
-			game.XBidTime = time.Time{}
-			game.OBidTime = time.Time{}
+			userX.BidTime = time.Time{}
+			userO.BidTime = time.Time{}
+			game.SetPlayers(userX, userO)
 			game.CountOfTurns += 1
 			game.Logbook = game.Logbook.SetTurnWinner(targetCell.V, game.Board.Winner() == btttmodels.NoWinnerYet)
 			if game.TgInlineMessageID != "" {
@@ -159,15 +166,10 @@ func processBid(whc bots.WebhookContext, gameID int64, bid int16, x, y int8) (m 
 			log.Errorf(c, err.Error())
 			return err
 		} else {
-			tgMessageID := tgResponse.TelegramMessage.(tgbotapi.Message).MessageID // TODO: Temporary, should be abstracted?
-			switch player {
-			case btttmodels.PlayerX:
-				game.XTgMessageID = tgMessageID
-			case btttmodels.PlayerO:
-				game.OTgMessageID = tgMessageID
-			default:
-				panic("Unknown player")
-			}
+			tgMessageID := strconv.Itoa(tgResponse.TelegramMessage.(tgbotapi.Message).MessageID) // TODO: Temporary, should be abstracted?
+			playerJson := game.GetPlayerJsonByUserID(user.ID)
+			playerJson.Tg.MessageID = tgMessageID
+			game.SetPlayerJson(user.ID, playerJson)
 		}
 
 		if oldChatID != 0 && oldMessageID != 0 {
@@ -186,7 +188,7 @@ func processBid(whc bots.WebhookContext, gameID int64, bid int16, x, y int8) (m 
 		return err
 	}, nil); err != nil {
 		if errors.Cause(err) == errBidTooBig {
-			m = whc.NewMessageByCode(bttt_trans.MT_BID_TOO_BIG, playerName, game.UserBalance(user.ID))
+			m = whc.NewMessageByCode(bttt_trans.MT_BID_TOO_BIG, playerName, game.GetPlayerJsonByUserID(user.ID).Balance)
 			err = nil
 		}
 		return m, err

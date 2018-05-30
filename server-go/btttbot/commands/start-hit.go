@@ -72,20 +72,26 @@ func startHit(whc bots.WebhookContext, mt string) (m bots.MessageFromBot, err er
 				if game, err = btttdal.Game.GetGameByID(c, game.ID); err != nil {
 					return err
 				}
+				initPlayerJson := func() (userXO btttmodels.GamePlayerJson) {
+					userXO = game.GetPlayerJsonByUserID(userID)
+					userXO.Balance = 100
+					userXO.Name = user.FullName()
+					return
+				}
 				switch int64(0) {
 				case game.XUserID:
 					player = btttmodels.PlayerX
 					game.XUserID = userID
-					game.XUserName = user.FullName()
+					game.SetPlayerX(initPlayerJson())
 				case game.OUserID:
 					player = btttmodels.PlayerO
 					game.OUserID = userID
-					game.OUserName = user.FullName()
+					game.SetPlayerO(initPlayerJson())
 				default:
 					return errNoFreeSlots
 				}
 				targetCell.V = player
-				if err = updateGameWith_Target_Chat_MessageID(whc, game, targetCell); err != nil {
+				if err = updateGameWithTargetChatMessageID(whc, game, targetCell); err != nil {
 					return err
 				}
 				return btttdal.Game.SaveGame(c, game)
@@ -139,7 +145,7 @@ func processHitForAlreadyJoinedPlayer(whc bots.WebhookContext, turnRequest btttm
 			}
 		}
 		player := game.Player(userID)
-		if err = updateGameWith_Target_Chat_MessageID(whc, game, btttmodels.Cell{X: int8(turnRequest.X), Y: int8(turnRequest.Y), V: player}); err != nil {
+		if err = updateGameWithTargetChatMessageID(whc, game, btttmodels.Cell{X: int8(turnRequest.X), Y: int8(turnRequest.Y), V: player}); err != nil {
 			return err
 		}
 		return btttdal.Game.SaveGame(c, game)
@@ -183,23 +189,22 @@ func askForBidAndUpdateOthers(whc bots.WebhookContext, game btttmodels.Game) (m 
 
 func updateOtherMessages(c context.Context, botID string, game btttmodels.Game, currentUserID int64, updateInline bool) (err error) {
 	log.Debugf(c, "updateOtherMessages(game.ID=%d, currentUserID=%d, updateInline=%v)", game.ID, currentUserID, updateInline)
-	var (
-		userID, tgChatID int64
-	)
+	var userID int64
 	switch currentUserID {
 	case game.XUserID:
 		userID = game.OUserID
-		tgChatID = game.OTgChatID
 	case game.OUserID:
 		userID = game.XUserID
-		tgChatID = game.XTgChatID
 	default:
 		panic("User ID does not belong to the game")
 	}
 
-	if userID != 0 && tgChatID != 0 {
-		if err = btttdelays.DelayUpdateInBotMessage(c, botID, game.ID, userID); err != nil {
-			return err
+	if userID != 0 {
+		userXO := game.GetPlayerJsonByUserID(userID)
+		if userXO.Tg.ChatID != "" {
+			if err = btttdelays.DelayUpdateInBotMessage(c, botID, game.ID, userID); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -208,22 +213,31 @@ func updateOtherMessages(c context.Context, botID string, game btttmodels.Game, 
 			return err
 		}
 	}
+
 	return nil
 }
 
-func updateGameWith_Target_Chat_MessageID(whc bots.WebhookContext, game btttmodels.Game, targetCell btttmodels.Cell) (err error) {
+func updateGameWithTargetChatMessageID(whc bots.WebhookContext, game btttmodels.Game, targetCell btttmodels.Cell) (err error) {
 	c := whc.Context()
-	log.Debugf(c, "updateGameWith_Target_Chat_MessageID()")
+	log.Debugf(c, "updateGameWithTargetChatMessageID(), targetCell=%+v", targetCell)
+	var playerUserID int64
+	switch targetCell.V {
+	case btttmodels.PlayerX:
+		playerUserID = game.XUserID
+	case btttmodels.PlayerO:
+		playerUserID = game.OUserID
+	default:
+		return fmt.Errorf("updateGameWithTargetChatMessageID: target cell references unknown player: %v", targetCell.V)
+	}
+	if playerUserID == 0 {
+		return fmt.Errorf("game %v has no user ID for player %v", game.ID, targetCell.V)
+	}
+
 	if targetCell.X > 0 && targetCell.Y > 0 {
 		game.Logbook = game.Logbook.LogTarget(targetCell.V, int(targetCell.X), int(targetCell.Y))
-		switch targetCell.V {
-		case btttmodels.PlayerX:
-			game.XBidTime = time.Time{}
-		case btttmodels.PlayerO:
-			game.OBidTime = time.Time{}
-		default:
-			return errors.New("TODO: Not a player")
-		}
+		playerJson := game.GetPlayerJsonByUserID(playerUserID)
+		playerJson.BidTime = time.Time{}
+		game.SetPlayerJson(playerUserID, playerJson)
 	}
 
 	var m bots.MessageFromBot
@@ -241,15 +255,11 @@ func updateGameWith_Target_Chat_MessageID(whc bots.WebhookContext, game btttmode
 		return err
 	}
 	tgMessage := response.TelegramMessage.(tgbotapi.Message)
-	switch targetCell.V {
-	case btttmodels.PlayerX:
-		game.XTgChatID = tgMessage.Chat.ID
-		game.XTgMessageID = tgMessage.MessageID
-	case btttmodels.PlayerO:
-		game.OTgChatID = tgMessage.Chat.ID
-		game.OTgMessageID = tgMessage.MessageID
-	default:
-		return errors.New("TODO: Not a player")
+	{ // setTelegramInfo
+		p := game.GetPlayerJsonByUserID(playerUserID)
+		p.Tg.ChatID = strconv.FormatInt(tgMessage.Chat.ID, 10)
+		p.Tg.MessageID = strconv.Itoa(tgMessage.MessageID)
+		game.SetPlayerJson(playerUserID, p)
 	}
 	return nil
 }

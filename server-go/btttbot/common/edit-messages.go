@@ -25,14 +25,16 @@ func User2player(userID int64, gameEntity *btttmodels.GameEntity) btttmodels.Pla
 	case gameEntity.OUserID:
 		return btttmodels.PlayerO
 	default:
-		if gameEntity.XUserID == 0 {
+		switch int64(0) {
+		case gameEntity.XUserID:
 			gameEntity.XUserID = userID
 			return btttmodels.PlayerX
-		} else if gameEntity.OUserID == 0 {
+		case gameEntity.OUserID:
 			gameEntity.OUserID = userID
 			return btttmodels.PlayerO
+		default:
+			return btttmodels.NotPlayer
 		}
-		return btttmodels.NotPlayer
 	}
 }
 
@@ -71,16 +73,16 @@ func GameMessageText(c context.Context, translator strongo.SingleLocaleTranslato
 	}
 	const padding = "\n  "
 
-	writePlayer := func(p, name string, userID int64, balance, bid, previousBid int, hasTarget bool) {
+	writePlayer := func(p string, gameUserID int64, gamePlayerJson btttmodels.GamePlayerJson, bid, previousBid int, hasTarget bool) {
 		mt.WriteString("\n" + translator.Translate(bttt_trans.MT_PLAYER, p))
-		if name == "" {
+		if gamePlayerJson.Name == "" {
 			mt.WriteString(" " + translator.Translate(bttt_trans.MT_AWAITING_PLAYER))
 		} else {
-			mt.WriteString(" " + name)
+			mt.WriteString(" " + gamePlayerJson.Name)
 		}
-		mt.WriteString(padding + translator.Translate(bttt_trans.MT_PLAYER_BALANCE, balance))
+		mt.WriteString(padding + translator.Translate(bttt_trans.MT_PLAYER_BALANCE, gamePlayerJson.Balance))
 		hasBid := bid > 0
-		if userID == currentUser.ID {
+		if gameUserID == currentUser.ID {
 			if hasBid {
 				mt.WriteString("; " + translator.Translate(bttt_trans.MT_YOUR_BID, bid))
 			}
@@ -95,7 +97,7 @@ func GameMessageText(c context.Context, translator strongo.SingleLocaleTranslato
 		}
 		if previousBid > 0 {
 			if bid > 0 {
-				if userID != currentUser.ID {
+				if gameUserID != currentUser.ID {
 					mt.WriteString(padding + translator.Translate(bttt_trans.MT_PREVIOUS_BID, previousBid))
 				}
 			} else {
@@ -106,8 +108,8 @@ func GameMessageText(c context.Context, translator strongo.SingleLocaleTranslato
 
 	currentTurn := game.Logbook.CurrentTurn()
 	previousTurn := game.Logbook.PreviousTurn()
-	writePlayer("X", game.XUserName, game.XUserID, game.XBalance, currentTurn.X.Bid, previousTurn.X.Bid, game.HasTarget(btttmodels.PlayerX))
-	writePlayer("O", game.OUserName, game.OUserID, game.OBalance, currentTurn.O.Bid, previousTurn.O.Bid, game.HasTarget(btttmodels.PlayerO))
+	writePlayer("X", game.XUserID, game.PlayerX(), currentTurn.X.Bid, previousTurn.X.Bid, game.HasTarget(btttmodels.PlayerX))
+	writePlayer("O", game.OUserID, game.PlayerO(), currentTurn.O.Bid, previousTurn.O.Bid, game.HasTarget(btttmodels.PlayerO))
 
 	if winner == btttmodels.NoWinnerYet {
 		if currentUser.ID > 0 {

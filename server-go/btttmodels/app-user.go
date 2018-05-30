@@ -6,6 +6,7 @@ import (
 	"github.com/strongo/db/gaedb"
 	"google.golang.org/appengine/datastore"
 	"time"
+	"github.com/strongo/arena"
 )
 
 const AppUserKind = "User"
@@ -46,6 +47,8 @@ type AppUserEntity struct {
 	LastName   string `datastore:",noindex"`
 	UserName   string `datastore:",noindex"`
 	Locale     string `datastore:",noindex"`
+
+	arena.UserContestantEntity
 }
 
 var _ bots.BotAppUser = (*AppUserEntity)(nil)
