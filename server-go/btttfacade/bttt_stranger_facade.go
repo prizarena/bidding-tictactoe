@@ -3,7 +3,7 @@ package btttfacade
 import (
 	"context"
 	"github.com/strongo-games/bidding-tictactoe/server-go/btttmodels"
-	"github.com/strongo/arena"
+	"github.com/strongo-games/arena/arena-go"
 	"time"
 	"github.com/strongo/log"
 	"github.com/strongo/db"
