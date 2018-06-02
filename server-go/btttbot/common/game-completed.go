@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/strongo/app"
-	"github.com/strongo-games/bidding-tictactoe/server-go/bttt-trans"
-	"github.com/strongo-games/bidding-tictactoe/server-go/btttdal"
-	"github.com/strongo-games/bidding-tictactoe/server-go/btttmodels"
+	"github.com/prizarena/bidding-tictactoe/server-go/bttt-trans"
+	"github.com/prizarena/bidding-tictactoe/server-go/btttdal"
+	"github.com/prizarena/bidding-tictactoe/server-go/btttmodels"
 	"html"
 )
 

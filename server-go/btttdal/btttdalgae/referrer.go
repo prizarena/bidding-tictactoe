@@ -2,8 +2,8 @@ package btttdalgae
 
 import (
 	"context"
-	"github.com/strongo-games/bidding-tictactoe/server-go/btttdal"
-	"github.com/strongo-games/bidding-tictactoe/server-go/btttmodels"
+	"github.com/prizarena/bidding-tictactoe/server-go/btttdal"
+	"github.com/prizarena/bidding-tictactoe/server-go/btttmodels"
 )
 
 type referrerDalGae struct {

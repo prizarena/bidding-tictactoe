@@ -1,7 +1,7 @@
 package routing
 
 import (
-	"github.com/strongo-games/bidding-tictactoe/server-go/btttbot/commands"
+	"github.com/prizarena/bidding-tictactoe/server-go/btttbot/commands"
 	"github.com/strongo/bots-framework/core"
 )
 

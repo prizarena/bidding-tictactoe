@@ -2,12 +2,12 @@ package btttfacade
 
 import (
 	"context"
-	"github.com/strongo-games/bidding-tictactoe/server-go/btttmodels"
-	"github.com/strongo-games/arena/arena-go"
+	"github.com/prizarena/bidding-tictactoe/server-go/btttmodels"
+	"github.com/prizarena/arena/arena-go"
 	"time"
 	"github.com/strongo/log"
 	"github.com/strongo/db"
-	"github.com/strongo-games/bidding-tictactoe/server-go/btttdal"
+	"github.com/prizarena/bidding-tictactoe/server-go/btttdal"
 	"strconv"
 )
 

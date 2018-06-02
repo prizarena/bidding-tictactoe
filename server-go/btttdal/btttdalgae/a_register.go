@@ -1,7 +1,7 @@
 package btttdalgae
 
 import (
-	"github.com/strongo-games/bidding-tictactoe/server-go/btttdal"
+	"github.com/prizarena/bidding-tictactoe/server-go/btttdal"
 	"github.com/strongo/db/gaedb"
 )
 

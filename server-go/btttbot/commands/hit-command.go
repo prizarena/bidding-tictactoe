@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/strongo-games/bidding-tictactoe/server-go/btttmodels"
+	"github.com/prizarena/bidding-tictactoe/server-go/btttmodels"
 	"github.com/strongo/bots-framework/core"
 	"github.com/strongo/log"
 	"net/url"
