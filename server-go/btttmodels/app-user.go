@@ -6,7 +6,7 @@ import (
 	"github.com/strongo/db/gaedb"
 	"google.golang.org/appengine/datastore"
 	"time"
-	"bitbucket.org/asterus/prizarena-private/prizarena-server/pamodels"
+		"github.com/prizarena/arena/arena-go"
 )
 
 const AppUserKind = "User"
@@ -48,7 +48,7 @@ type AppUserEntity struct {
 	UserName   string `datastore:",noindex"`
 	Locale     string `datastore:",noindex"`
 
-	pamodels.UserContestantEntity
+	arena.UserContestantEntity
 }
 
 var _ bots.BotAppUser = (*AppUserEntity)(nil)
