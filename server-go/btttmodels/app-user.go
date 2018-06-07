@@ -6,6 +6,7 @@ import (
 	"github.com/strongo/db/gaedb"
 	"google.golang.org/appengine/datastore"
 	"time"
+	"github.com/strongo/app"
 )
 
 const AppUserKind = "User"
@@ -42,10 +43,7 @@ func (AppUser) NewEntity() interface{} {
 type AppUserEntity struct {
 	DtCreated  time.Time
 	ReferrerID string
-	FirstName  string `datastore:",noindex"`
-	LastName   string `datastore:",noindex"`
-	UserName   string `datastore:",noindex"`
-	Locale     string `datastore:",noindex"`
+	strongo.AppUserBase
 }
 
 var _ bots.BotAppUser = (*AppUserEntity)(nil)
@@ -71,22 +69,6 @@ func (entity *AppUserEntity) SetNames(first, last, user string) {
 
 func (entity *AppUserEntity) GetCurrencies() (result []string) { // TODO: Temporary to satisfy obsolete member of interface
 	return
-}
-
-func (entity *AppUserEntity) FullName() string {
-	if entity.FirstName != "" && entity.LastName != "" {
-		return entity.FirstName + " " + entity.LastName
-	}
-	if entity.FirstName != "" {
-		return entity.FirstName
-	}
-	if entity.LastName != "" {
-		return entity.LastName
-	}
-	if entity.UserName != "" {
-		return entity.UserName
-	}
-	return ""
 }
 
 func (entity *AppUserEntity) Load(ps []datastore.Property) error {
