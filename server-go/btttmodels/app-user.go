@@ -5,7 +5,6 @@ import (
 	"github.com/strongo/db"
 	"github.com/strongo/db/gaedb"
 	"google.golang.org/appengine/datastore"
-	"time"
 	"github.com/strongo/app"
 )
 
@@ -41,7 +40,6 @@ func (AppUser) NewEntity() interface{} {
 }
 
 type AppUserEntity struct {
-	DtCreated  time.Time
 	ReferrerID string
 	strongo.AppUserBase
 }
