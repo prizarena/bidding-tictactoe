@@ -54,7 +54,7 @@ func AskToConfirmBid(whc bots.WebhookContext, matches []string) (m bots.MessageF
 				Title:       whc.Translate(bttt_trans.INLINE_BID_TITLE, bid),
 				Description: whc.Translate(bttt_trans.INLINE_BID_DESC),
 				InputMessageContent: tgbotapi.InputTextMessageContent{
-					Text:                  whc.Translate(bttt_trans.MT_BID_BY, html.EscapeString(user.FullName())),
+					Text:                  whc.Translate(bttt_trans.MT_BID_BY, html.EscapeString(user.GetFullName())),
 					ParseMode:             "HTML",
 					DisableWebPagePreview: true,
 				},

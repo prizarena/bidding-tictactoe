@@ -86,7 +86,7 @@ func processBid(whc bots.WebhookContext, gameID int64, bid int16, x, y int8) (m 
 					return err
 				}
 				user := botUser.(*btttmodels.AppUserEntity)
-				userO.Name = user.FullName()
+				userO.Name = user.GetFullName()
 			}
 		default:
 			panic(fmt.Sprintf("Unknown player value: %v", player))

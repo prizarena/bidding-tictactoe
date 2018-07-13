@@ -75,7 +75,7 @@ func startHit(whc bots.WebhookContext, mt string) (m bots.MessageFromBot, err er
 				initPlayerJson := func() (userXO btttmodels.GamePlayerJson) {
 					userXO = game.GetPlayerJsonByUserID(userID)
 					userXO.Balance = 100
-					userXO.Name = user.FullName()
+					userXO.Name = user.GetFullName()
 					return
 				}
 				switch int64(0) {

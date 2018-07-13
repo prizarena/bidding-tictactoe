@@ -47,7 +47,7 @@ var CreateBoardCommand = bots.Command{
 		inlineMessageID := callbackQuery.InlineMessageID
 
 		if err = nds.RunInTransaction(c, func(c context.Context) error {
-			if game, err = btttdal.NewGameInTelegramChat(c, boardSize, localeCode, user.ID, user.FullName(), callbackQuery.ChatInstance, inlineMessageID, game); err != nil {
+			if game, err = btttdal.NewGameInTelegramChat(c, boardSize, localeCode, user.ID, user.GetFullName(), callbackQuery.ChatInstance, inlineMessageID, game); err != nil {
 				return errors.Wrap(err, "Failed to create new game in datastore")
 			}
 			return err

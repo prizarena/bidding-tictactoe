@@ -36,7 +36,7 @@ var NewGameCommand = bots.Command{
 		user.AppUserEntity = botUser.(*btttmodels.AppUserEntity)
 
 		if err = nds.RunInTransaction(c, func(c context.Context) error {
-			if newGame, err = btttdal.NewGameInTelegramChat(c, oldGame.Board.Size(), oldGame.Locale, user.ID, user.FullName(), oldGame.TgChatInstance, "", oldGame); err != nil {
+			if newGame, err = btttdal.NewGameInTelegramChat(c, oldGame.Board.Size(), oldGame.Locale, user.ID, user.GetFullName(), oldGame.TgChatInstance, "", oldGame); err != nil {
 				return errors.Wrap(err, "Failed to create new game in datastore")
 			}
 			rivalUserID := newGame.RivalUserUD(user.ID)

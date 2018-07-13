@@ -37,7 +37,7 @@ func writeTgFooterForWinner(c context.Context, buf *bytes.Buffer, currentUser bt
 		}
 	}
 
-	buf.WriteString(translator.Translate(bttt_trans.MT_USER_WON_GAME, html.EscapeString(winnerUser.FullName())))
+	buf.WriteString(translator.Translate(bttt_trans.MT_USER_WON_GAME, html.EscapeString(winnerUser.GetFullName())))
 	fmt.Fprintf(buf, "\n<pre>%v</pre>", game.Board.Draw())
 
 	//footer += "\n" + translator.Translate(bttt_trans.MT_TOURNAMENT_201710_SHORT) +
